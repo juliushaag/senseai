@@ -1,31 +1,32 @@
 from senseai.sense import SensorManager
-from senseai.service import Service
-import cv2 as cv
-from PyQt5.QtCore import QThread, pyqtSignal
+from senseai.service import ServiceTask
 
-class VisualService(Service):
+class VisualService(ServiceTask):
+
+  def __init__(self, manager : SensorManager):
+    super().__init__()
+    self.man = manager
+    import cv2
+    self.cv = cv2
 
   def start(self):
-    self.manager = SensorManager.Get()
     self.windows = set()
-  
+
   def stop(self):
     for win in self.windows: 
-      cv.destroyWindow(win)
-  
+      self.cv.destroyWindow(win)
+
   def update(self):
-    data = self.manager.get_data()
+    data = self.man.data()
     for key in data:
       if key not in self.windows:
-        cv.namedWindow(key)
+        self.cv.namedWindow(key)
         self.windows.add(key)
 
 
     for key, value in data.items():
-      cv.imshow(key, value)
+      self.cv.imshow(key, value)
 
-    key = cv.waitKey(1) & 0xFF
+    key = self.cv.waitKey(20) & 0xFF
     if key == ord('q'):
-      self.manager.close()
-    if key == ord('w'):
-      self.manager.reset()
+      self.man.close()

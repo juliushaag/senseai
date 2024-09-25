@@ -3,70 +3,63 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from typing import Callable, Dict, Iterable, Iterator, List, Tuple
 import weakref
-from .sensor import SensorDevice
-from .buffer import BufferDevice, BufferManager
-from .service import Service, ServiceManager
+from senseai.sensor import SensorDevice
+from senseai.buffer import BufferTask
+from senseai.service import ServiceTask
 
+from senseai.task import TaskManager
 
 class SensorManager:
 
-  _instance = None
-
   def __init__(self) -> None:
-    # Cleanup in every 
-    if SensorManager._instance is not None:
-      return RuntimeError("Multiple instancation of Sensormanager use Get()")
     
-    SensorManager._instance = self 
-
     self._weak_ref = weakref.finalize(self, self.shutdown)
-    
-    self._buffer_manager = BufferManager()
-    self._service_manager = ServiceManager()
 
+    self._task_manager = TaskManager()
     self.running = True
     self.cleaned_up = False
 
-    self.buffer_lock = Lock()
+    self._buffers : List[BufferTask] = list()
+    self._services : List[ServiceTask] = list()
 
-  @staticmethod
-  def Get() -> "SensorManager":
-    return SensorManager._instance
-    
   def attach_sensors(self, sensors : Iterable[SensorDevice]):
-    self._buffer_manager.attach([BufferDevice(dev) for dev in sensors])
+    for dev in sensors:
+      task = BufferTask(dev)
+      self._task_manager.start_task(task)
+      self._buffers.append(task)
 
-  def attach_services(self, services : Iterable[Service]):
-    self._service_manager.attach(services)
+  def attach_services(self, services : Iterable[ServiceTask]):
+    for service in services: 
+      self._task_manager.start_task(service)
+      self._services.append(service)
 
   def shutdown(self):
     if self.cleaned_up: return
-
-    self._service_manager._shutdown()
-    self._buffer_manager.shutdown()
-
+    self._task_manager.shutdown()
     self.cleaned_up = True
 
   def reset(self):
-    with self.buffer_lock:
-      self._buffer_manager.reset()
 
-  
+    self._task_manager.shutdown()
+
+    for task in self._buffers:
+      self._task_manager.start_task(task)
+
+    for service in self._services:
+      self._task_manager.start_task(service)
+
+
   def close(self):
     self.running = False
 
-  def run(self):
-    while self.running and self._service_manager.check_status() and self._buffer_manager.check_status(): 
-      ...
-    
-    self.shutdown()
-    self._service_manager.raise_errors()
-    self._buffer_manager.raise_errors()
+  def check(self):
+    self._task_manager.check_status()
 
-  def get_data(self, devices : Iterable[str] = None):
-    self._service_manager.check_status()
-    with self.buffer_lock:
-      return self._buffer_manager.get_data(devices)
-  
+  def data(self, devices : Iterable[str] = None):
+    if not devices:
+      return { buff.dev_name : buff.data for buff in self._buffers if buff.initialized }
+    else:
+      return { buff.dev_name : buff.data for buff in self._buffers if buff.initialized and buff.dev_name in devices }
 
-SensorManager()
+  def __del__(self):
+    self._task_manager.shutdown()
