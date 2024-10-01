@@ -21,10 +21,8 @@ class BufferTask(Task):
 
 
   def start(self):
-
     self.dev.open()
     self.initialized = True
-
 
   def stop(self):
     self.dev.close()

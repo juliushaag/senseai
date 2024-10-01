@@ -25,7 +25,7 @@ class AzureCamera(Camera):
 
     @classmethod
     def available(cls):
-        return list(range(0, pykinect.Device.device_get_installed_count()))
+        return list(range(pykinect.Device.device_get_installed_count()))
 
 
     def __init__(self, device_id: int, resolution : tuple[int]):
@@ -50,11 +50,13 @@ class AzureCamera(Camera):
 
     def open(self):
         self.device = pykinect.start_device(device_index=self.device_id, config=self.device_config)
+        while not self.device.is_capture_initialized():
+            self.device.update()
 
     def read(self) -> np.ndarray:
-        capture = self.device.update()
+        capture = self.device.update(2)
         success, image = capture.get_color_image()
-        if success: image = cv2.resize(image, self.resolution)[:, :, 2::-1]
+        if success: image = cv2.resize(image, self.resolution, interpolation=cv2.INTER_CUBIC)[:, :, 2::-1]
         return image
 
     def close(self):

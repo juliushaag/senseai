@@ -1,21 +1,46 @@
 import time
 from senseai.sense import SensorManager
-from senseai.sensors.camera import OpenCVCameraSensor, DepthAICamera
-
+from senseai.sensors.camera_azure import AzureCamera
+from senseai.sensors.camera_depthai import DepthAICamera
+from senseai.sensors.camera_realsense import Realsense
 from senseai.services.default import VisualService
 
 man = SensorManager()
 
-devs = DepthAICamera.available_devices()
-ddevs = [DepthAICamera(dev, (620, 320)) for dev in devs]
+res = (512, 512)
 
-man.attach_sensors(*ddevs)
-man.attach_services(VisualService(man))
+adevs = AzureCamera.available()
+ddevs = DepthAICamera.available()
+rdevs = Realsense.available()
+print(f"""
+Found: 
+  {len(adevs)} azure camera devices
+  {len(ddevs)} depthai camera devices
+""")
+
+
+# devs = [AzureCamera(dev, res) for dev in adevs]
+
+# man.attach_sensors(*devs)
+# man.wait_init()
+
+# print("azure initialized")
+
+# devs = [DepthAICamera(dev, res) for dev in ddevs]
+
+
+man.attach_sensors(Realsense(res))
+man.attach_services(VisualService(man, img_size=(512, 512)))
 
 man.wait_init()
+print("Everything is initialized")
 
-while man.running:
-  time.sleep(.1)
-  man.check()
+
+try:
+  while man.running:
+    time.sleep(.1)
+    man.check()
+except KeyboardInterrupt:
+  ...
 
 man.shutdown()

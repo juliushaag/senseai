@@ -12,8 +12,8 @@ class Task(ABC):
     super().__init__()
     self.thread : Thread = Thread(target=self._loop_impl)
     self.exceptions : deque = deque()
-    self._running : bool = False
-    self._finished : bool = False
+    self.running : bool = False
+    self.finished : bool = False
 
 
   @abstractmethod
@@ -30,19 +30,18 @@ class Task(ABC):
 
   def _loop_impl(self):
     
-    self._finished = False
+    self.finished = False
 
     self.start()
 
     try:
-      while self._running:
+      while self.running:
         self.update()
     except Exception as e:
       self.exceptions.append(e)
     finally:
       self.stop()
-    
-    self._finished = True
+      self.finished = True
 
 class TaskManager:
 
@@ -54,11 +53,11 @@ class TaskManager:
     return list(self._tasks)
 
   def start_task(self, task : Task):
-    
-    if task._running:
-      self.shutdown_task(Task)
 
-    task._running = True
+    if task.running:
+      self.shutdown_task(task)
+
+    task.running = True
 
     task.exceptions.clear()
     task.thread.start()
@@ -70,21 +69,23 @@ class TaskManager:
     while task.exceptions:
       raise task.exceptions.pop()
     
-    if task.thread != None:
-      task._running = False
+    if task.thread.is_alive():
+      task.running = False
       task.thread.join()
-      task.thread = None
-    
+
     self._tasks.remove(task)
   
   def check_status(self):
     for task in self._tasks:
       if task.exceptions:
         self.shutdown()
-      if task._finished:
+      if task.finished:
         self.shutdown_task(task)
   
   def shutdown(self):
 
+    for task in self._tasks:
+      task.running = False
+    
     for task in list(self._tasks):
       self.shutdown_task(task)

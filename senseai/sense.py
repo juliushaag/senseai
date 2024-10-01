@@ -48,9 +48,11 @@ class SensorManager:
 
   def close(self):
     self.running = False
-
+    
   def check(self):
     self._task_manager.check_status()
+    if not self.running:
+      self.shutdown()
 
   def data(self, devices : Iterable[str] = None):
     if not devices:
@@ -60,7 +62,7 @@ class SensorManager:
     
 
   def wait_init(self):
-    while not all(buff.initialized for buff in self._buffers):
+    while not all(buff.initialized or buff.finished for buff in self._buffers):
       ...
 
   def __del__(self):

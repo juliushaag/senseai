@@ -12,7 +12,6 @@ class ServiceTask(Task):
 
     self.update_freq = update_freq
     self.name = name or self.__class__.__name__
-    self.running = True
 
 
   @abstractmethod
