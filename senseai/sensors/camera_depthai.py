@@ -27,19 +27,23 @@ class DepthAICamera(Camera):
     self.cam = self.pipeline.create(dai.node.ColorCamera)
     self.cam.setBoardSocket(dai.CameraBoardSocket.CAM_A) # A cam is stereo rgb, b and c mono probably depth
     self.cam.setPreviewSize(*self.resolution)
+    self.cam.setInterleaved(False)
+    self.cam.setColorOrder(dai.ColorCameraProperties.ColorOrder.RGB)
 
     # XLinkOut: Cam to PC, XLinkIn: PC to Cam
     # We set this up to send the image from the cam to the pc 
     self.stream_name = self.device_name + "-stream"
+
     self.stream = self.pipeline.create(dai.node.XLinkOut)
     self.stream.setStreamName(self.stream_name)
+    self.stream.setFpsLimit(self.fps)
 
     # link camera output to stream
     self.cam.preview.link(self.stream.input)
 
 
-    self.device = dai.Device(pipeline=self.pipeline, devInfo=self.device_info, usb2Mode=False)
-    self.output_queue : dai.DataOutputQueue = self.device.getOutputQueue(name=self.stream_name, maxSize=1)
+    self.device = dai.Device(pipeline=self.pipeline, devInfo=self.device_info)
+    self.output_queue : dai.DataOutputQueue = self.device.getOutputQueue(name=self.stream_name, maxSize=1, blocking=True)
     
 
   def close(self):

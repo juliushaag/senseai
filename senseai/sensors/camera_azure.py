@@ -54,7 +54,7 @@ class AzureCamera(Camera):
             self.device.update()
 
     def read(self) -> np.ndarray:
-        capture = self.device.update(2)
+        capture = self.device.update()
         success, image = capture.get_color_image()
         if success: image = cv2.resize(image, self.resolution, interpolation=cv2.INTER_CUBIC)[:, :, 2::-1]
         return image

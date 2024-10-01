@@ -21,20 +21,20 @@ Found:
 """)
 
 
+devs = [DepthAICamera(dev, res) for dev in ddevs]
+man.attach_sensors(*devs)
+man.wait_init()
+
 # devs = [AzureCamera(dev, res) for dev in adevs]
 
 # man.attach_sensors(*devs)
-# man.wait_init()
+man.wait_init()
 
-# print("azure initialized")
+print("azure initialized")
+# man.attach_sensors(*[RealsenseCamera(dev, (640, 480)) for dev in rdevs])
 
-# devs = [DepthAICamera(dev, res) for dev in ddevs]
-
-
-man.attach_sensors(*[RealsenseCamera(dev, (640, 480)) for dev in rdevs])
 man.attach_services(VisualService(man))
 
-man.wait_init()
 print("Everything is initialized")
 
 
