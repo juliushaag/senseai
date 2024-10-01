@@ -4,6 +4,8 @@ from typing import Tuple
 import numpy as np
 from senseai.sensor import SensorDevice
 
+import cv2 as cv 
+
 class OpenCVCameraSensor(SensorDevice):
 
   def __init__(self, path : Path = None, fps = None, res = None) -> None:
@@ -11,18 +13,15 @@ class OpenCVCameraSensor(SensorDevice):
     self.device = path or 0
     self.fps = fps
     self.res = res
-    import cv2 
-
-    self.cv = cv2
 
   def open(self):
-    self.cap = self.cv.VideoCapture(self.device)
+    self.cap = cv.VideoCapture(self.device)
 
     if self.fps is None:
-      self.fps = self.cap.get(self.cv.CAP_PROP_FPS)
+      self.fps = self.cap.get(cv.CAP_PROP_FPS)
 
-    self.width = self.res[0] if self.res else int(self.cap.get(self.cv.CAP_PROP_FRAME_WIDTH))
-    self.height = self.res[1] if self.res else int(self.cap.get(self.cv.CAP_PROP_FRAME_HEIGHT))
+    self.width = self.res[0] if self.res else int(self.cap.get(cv.CAP_PROP_FRAME_WIDTH))
+    self.height = self.res[1] if self.res else int(self.cap.get(cv.CAP_PROP_FRAME_HEIGHT))
 
   def get_data_shape(self) -> Tuple:
     return (self.height, self.width, 3)  
@@ -37,7 +36,7 @@ class OpenCVCameraSensor(SensorDevice):
     success, frame = self.cap.read()
 
     if self.res:
-      frame = self.cv.resize(frame, self.res, interpolation=self.cv.INTER_AREA)
+      frame = cv.resize(frame, self.res, interpolation=cv.INTER_AREA)
   
     return success, frame
 

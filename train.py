@@ -37,9 +37,6 @@ class MNISTNet(nn.Module):
     return F.softmax(x, dim=1)
 
 
-
-
-
 if __name__ == "__main__":
   
 
@@ -56,7 +53,7 @@ if __name__ == "__main__":
   train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
   
   network = MNISTNet().to(DEVICE)
-  optimizer = optim.SGD(network.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+  optimizer = optim.AdamW(network.parameters(), lr=LEARNING_RATE)
 
   # Main training loop
   for _ in range(0, EPOCHS):

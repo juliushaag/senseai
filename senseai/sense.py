@@ -1,7 +1,4 @@
-from threading import Lock
-from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
-from typing import Callable, Dict, Iterable, Iterator, List, Tuple
+from typing import Iterable, List
 import weakref
 from senseai.sensor import SensorDevice
 from senseai.buffer import BufferTask

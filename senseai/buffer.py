@@ -1,9 +1,5 @@
 
-import asyncio
-from collections import deque
-from threading import Thread
 import time
-from typing import Dict, Iterable, Iterator, List
 
 import numpy as np
 from senseai.sensor import SensorDevice
@@ -14,6 +10,7 @@ class BufferTask(Task):
 
   def __init__(self, dev : SensorDevice):
     super().__init__()
+    
     self.initialized = False
     self.dev = dev
 

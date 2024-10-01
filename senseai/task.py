@@ -3,14 +3,16 @@ from collections import deque
 from threading import Thread
 from typing import List
 
+
+
+
 class Task(ABC):
 
   def __init__(self) -> None:
     super().__init__()
-    self._thread : Thread = None
-    self._exceptions : deque = None
+    self.thread : Thread = Thread(target=self._loop_impl)
+    self.exceptions : deque = deque()
     self._running : bool = False
-
     self._finished : bool = False
 
 
@@ -26,7 +28,7 @@ class Task(ABC):
   def update():
     ...
 
-  def _thread_loop_impl(self):
+  def _loop_impl(self):
     
     self._finished = False
 
@@ -36,7 +38,7 @@ class Task(ABC):
       while self._running:
         self.update()
     except Exception as e:
-      self._exceptions.append(e)
+      self.exceptions.append(e)
     finally:
       self.stop()
     
@@ -53,31 +55,31 @@ class TaskManager:
 
   def start_task(self, task : Task):
     
-    if task._thread != None:
+    if task._running:
       self.shutdown_task(Task)
 
-    task._thread = Thread(target=task._thread_loop_impl)
     task._running = True
-    task._exceptions = deque()
-    task._thread.start()
+
+    task.exceptions.clear()
+    task.thread.start()
 
     self._tasks.append(task)
 
   def shutdown_task(self, task : Task):
 
-    while task._exceptions:
-      raise task._exceptions.pop()
+    while task.exceptions:
+      raise task.exceptions.pop()
     
-    if task._thread != None:
+    if task.thread != None:
       task._running = False
-      task._thread.join()
-      task._thread = None
+      task.thread.join()
+      task.thread = None
     
-    if task in self._tasks: self._tasks.remove(task)
+    self._tasks.remove(task)
   
   def check_status(self):
     for task in self._tasks:
-      if len(task._exceptions) > 0:
+      if task.exceptions:
         self.shutdown()
       if task._finished:
         self.shutdown_task(task)

@@ -31,6 +31,7 @@ class MNISTService(ServiceTask):
   
   def update(self):
     super().update()
+    
     img = man.data()["OpenCVCameraSensor:0"].copy()
 
     img  = cv.resize(img, (28, 28), interpolation=cv.INTER_AREA)
