@@ -19,13 +19,13 @@ class SensorManager:
     self._buffers : List[BufferTask] = list()
     self._services : List[ServiceTask] = list()
 
-  def attach_sensors(self, sensors : Iterable[SensorDevice]):
+  def attach_sensors(self, *sensors : list[SensorDevice]):
     for dev in sensors:
       task = BufferTask(dev)
       self._task_manager.start_task(task)
       self._buffers.append(task)
 
-  def attach_services(self, services : Iterable[ServiceTask]):
+  def attach_services(self, *services : list[ServiceTask]):
     for service in services: 
       self._task_manager.start_task(service)
       self._services.append(service)
@@ -54,9 +54,14 @@ class SensorManager:
 
   def data(self, devices : Iterable[str] = None):
     if not devices:
-      return { buff.dev_name : buff.data for buff in self._buffers if buff.initialized }
+      return { buff.dev_name : buff.data for buff in self._buffers }
     else:
-      return { buff.dev_name : buff.data for buff in self._buffers if buff.initialized and buff.dev_name in devices }
+      return { buff.dev_name : buff.data for buff in self._buffers if buff.dev_name in devices }
+    
+
+  def wait_init(self):
+    while not all(buff.initialized for buff in self._buffers):
+      ...
 
   def __del__(self):
     self._task_manager.shutdown()

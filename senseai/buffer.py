@@ -13,16 +13,16 @@ class BufferTask(Task):
     
     self.initialized = False
     self.dev = dev
-
-  def start(self):
-    self.dev.open()
-
     self.dev_name = self.dev.get_name()
+
     self.data : np.ndarray = np.zeros(shape=self.dev.get_data_shape(), dtype=self.dev.get_data_type())  
     self.iteration_time = 1 / self.dev.get_update_freq()
     self.data_lock = Lock()
 
-    
+
+  def start(self):
+
+    self.dev.open()
     self.initialized = True
 
 
@@ -36,13 +36,11 @@ class BufferTask(Task):
     return view 
   
   def update(self):
-    start = time.monotonic()
-    success, value = self.dev.read()
-    if success:
+    value = self.dev.read()
+    if value is not None:
       with self.data_lock:
         self.data[:] = value
-    duration = time.monotonic() - start
-    time.sleep(self.iteration_time - duration)
+    time.sleep(self.iteration_time)
       
   def __repr__(self):
     return f"<BufferDevice dev=\"{self.dev_name}\">"

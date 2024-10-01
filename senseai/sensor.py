@@ -14,11 +14,12 @@ class SensorDevice(ABC):
     self.device_name = device_name
     if not self.device_name:
       cls_name = self.__class__.__name__
-      self._default_name = f"{str(cls_name)}:{SensorDevice._SENSOR_CLASSES_COUNT[cls_name]}"
+      self.device_name = f"{str(cls_name)}:{SensorDevice._SENSOR_CLASSES_COUNT[cls_name]}"
       SensorDevice._SENSOR_CLASSES_COUNT[cls_name] += 1 
+    
 
   def get_name(self):
-    return self._default_name
+    return self.device_name
   
   @abstractmethod
   def get_update_freq(self):
